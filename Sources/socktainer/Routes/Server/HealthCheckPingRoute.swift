@@ -18,8 +18,8 @@ extension HealthCheckPingRoute {
 
             // add headers
             response.headers.add(name: "Api-Version", value: "1.51")
-            // not supported
-            response.headers.add(name: "Builder-Version", value: "")
+            // not supported - use "1" to avoid empty header parsing issues in some clients
+            response.headers.add(name: "Builder-Version", value: "1")
             response.headers.add(name: "Docker-Experimental", value: "false")
 
             // Cache control

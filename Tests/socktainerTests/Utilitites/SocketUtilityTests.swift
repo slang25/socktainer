@@ -34,7 +34,8 @@ import Vapor
         try fileManager.createDirectory(at: socketDir, withIntermediateDirectories: true)
         fileManager.createFile(atPath: socketPath.path, contents: Data())
 
-        try prepareUnixSocket(for: app, homeDirectory: tempHome.path)
+        let preparedPath = try prepareUnixSocket(for: app, homeDirectory: tempHome.path)
+        configureUnixServer(for: app, socketPath: preparedPath)
 
         #expect(fileManager.fileExists(atPath: socketDir.path))
         #expect(!fileManager.fileExists(atPath: socketPath.path))

@@ -226,6 +226,27 @@ extension ContainerCreateRoute {
             // NOTE: [WORKAROUND] to include creation timestamp since it is not handled by Apple Container
             //       https://github.com/apple/container/issues/302
             labels["io.github.socktainer.creation-timestamp"] = String(Date().timeIntervalSince1970)
+
+            // Store ExtraHosts in labels for future use when upstream support is added
+            // NOTE: Apple Container's ContainerConfiguration does not currently support a hosts field
+            if let extraHosts = body.HostConfig?.ExtraHosts, !extraHosts.isEmpty {
+                labels["io.github.socktainer.extra-hosts"] = extraHosts.joined(separator: ",")
+            }
+
+            // Auto-inject host.containers.internal when TCP mode is enabled or --inject-hostname flag is set
+            if let cliOptions = req.application.storage[CLIOptionsKey.self],
+               cliOptions.tcp || cliOptions.injectHostname {
+                let hostEntry = "host.containers.internal:192.168.64.1"
+                if let existingHosts = labels["io.github.socktainer.extra-hosts"], !existingHosts.isEmpty {
+                    // Append to existing hosts if not already present
+                    if !existingHosts.contains("host.containers.internal") {
+                        labels["io.github.socktainer.extra-hosts"] = existingHosts + "," + hostEntry
+                    }
+                } else {
+                    labels["io.github.socktainer.extra-hosts"] = hostEntry
+                }
+            }
+
             containerConfiguration.labels = labels
 
             var resolvedMounts: [Filesystem] = []

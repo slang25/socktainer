@@ -51,7 +51,9 @@ Get started with socktainer CLI in just a few commands:
 
 ```bash
 ./socktainer
-FolderWatcher] Started watching $HOME/Library/Application Support/com.apple.container
+[FolderWatcher] Started watching $HOME/Library/Application Support/com.apple.container
+[ INFO ] Starting TCP server on 0.0.0.0:2375
+[ INFO ] TCP server listening on 0.0.0.0:2375
 [ NOTICE ] Server started on http+unix: $HOME/.socktainer/container.sock
 ...
 ```
@@ -74,13 +76,45 @@ DOCKER_HOST=unix://$HOME/.socktainer/container.sock docker ps
 DOCKER_HOST=unix://$HOME/.socktainer/container.sock docker images
 ```
 
+### Docker-in-Docker 🐳🐳
+
+Socktainer enables Docker-in-Docker by exposing a TCP endpoint (bound to `0.0.0.0:2375` by default). Containers can reach the host via the gateway IP `192.168.64.1`.
+
+From inside a container:
+
+```bash
+export DOCKER_HOST=tcp://192.168.64.1:2375
+docker ps
+docker run --rm alpine echo "Hello from nested container!"
+```
+
+Or using the injected hostname (when using `--inject-hostname` or TCP is enabled):
+
+```bash
+export DOCKER_HOST=tcp://host.containers.internal:2375
+docker ps
+```
+
+To disable TCP (Unix socket only):
+
+```bash
+./socktainer --no-tcp
+```
+
+To restrict TCP to localhost only (no Docker-in-Docker):
+
+```bash
+./socktainer --tcp-host 127.0.0.1
+```
+
 ---
 
 ## Key Features ✨
 
-- Built on **Apple’s Container Framework** 🍏
+- Built on **Apple's Container Framework** 🍏
 - Provides **Docker REST API compatibility** 🔄 (partial)
 - Listens on a Unix domain socket `$HOME/.socktainer/container.sock`
+- **Docker-in-Docker support** via TCP on `0.0.0.0:2375` (containers reach host via `192.168.64.1`) 🐳
 - Supports container lifecycle operations: inspect, stop, remove 🛠️
 - Supports image listing, pulling, deletion, logs, health checks. Exec without interactive mode 📄
 - Broadcasts container events for client liveness monitoring 📡
